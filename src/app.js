@@ -1,4 +1,5 @@
 const express = require('express');
+const responseEnvelope = require('./middlewares/responseEnvelope');
 const authRoutes = require('./modules/auth/auth.routes');
 const filesRoutes = require('./modules/files/files.routes');
 const companiesRoutes = require('./modules/companies/companies.routes');
@@ -8,6 +9,7 @@ const paymentsRoutes = require('./modules/payments/payments.routes');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+app.use(responseEnvelope);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ ok: true, service: 'credimerc-backend' });

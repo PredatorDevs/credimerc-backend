@@ -106,6 +106,17 @@ Esto inicializa:
 - Archivo HTTP de payments: `api/contracts/payments.http`
 - Contrato OpenAPI: `api/contracts/files.openapi.yaml`
 
+## Estandar de respuesta API
+
+- Exito: `{ success: true, data, message, meta }`
+- Error: `{ success: false, error, message, details }`
+
+Esto se aplica globalmente mediante middleware en `src/middlewares/responseEnvelope.js`.
+
+## Checklist Flutter
+
+- Ver guia: `docs/flutter_integration_checklist.md`
+
 ## Datos demo
 
 - Migration/script: `database/migrations/007_demo_seed_data.sql`
