@@ -6,7 +6,7 @@ function roundMoney(value) {
 }
 
 function normalizeOptional(value) {
-  if (value === undefined) return undefined;
+  if (value === undefined) return null;
   if (value === null) return null;
   const trimmed = typeof value === 'string' ? value.trim() : value;
   return trimmed === '' ? null : trimmed;

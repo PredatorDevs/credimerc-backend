@@ -91,18 +91,20 @@ async function listLoans({ companyId, query }) {
   const page = query.page || 1;
   const pageSize = query.pageSize || 20;
   const offset = (page - 1) * pageSize;
+  const safeLimit = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : 20;
+  const safeOffset = Number.isInteger(offset) && offset >= 0 ? offset : 0;
 
-  const filters = ['l.company_id = :companyId'];
-  const params = { companyId, limit: pageSize, offset };
+  const filters = ['l.company_id = ?'];
+  const filterParams = [companyId];
 
   if (query.status) {
-    filters.push('l.status = :status');
-    params.status = query.status;
+    filters.push('l.status = ?');
+    filterParams.push(query.status);
   }
 
   if (query.customerId) {
-    filters.push('l.customer_id = :customerId');
-    params.customerId = query.customerId;
+    filters.push('l.customer_id = ?');
+    filterParams.push(query.customerId);
   }
 
   if (query.overdueOnly) {
@@ -139,12 +141,12 @@ async function listLoans({ companyId, query }) {
        AND c.id = l.customer_id
       WHERE ${whereClause}
       ORDER BY l.id DESC
-      LIMIT :limit OFFSET :offset
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `,
-    params
+    filterParams
   );
 
-  const [countRows] = await db.execute(`SELECT COUNT(*) AS total FROM loans l WHERE ${whereClause}`, params);
+  const [countRows] = await db.execute(`SELECT COUNT(*) AS total FROM loans l WHERE ${whereClause}`, filterParams);
 
   return {
     items,

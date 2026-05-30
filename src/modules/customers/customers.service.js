@@ -6,7 +6,7 @@ function buildFullName(firstName, lastName) {
 }
 
 function normalizeOptional(value) {
-  if (value === undefined) return undefined;
+  if (value === undefined) return null;
   if (value === null) return null;
   const trimmed = typeof value === 'string' ? value.trim() : value;
   return trimmed === '' ? null : trimmed;
@@ -134,18 +134,21 @@ async function listCustomers({ companyId, query }) {
   const page = query.page || 1;
   const pageSize = query.pageSize || 20;
   const offset = (page - 1) * pageSize;
+  const safeLimit = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : 20;
+  const safeOffset = Number.isInteger(offset) && offset >= 0 ? offset : 0;
 
-  const filters = ['company_id = :companyId'];
-  const params = { companyId, limit: pageSize, offset };
+  const filters = ['company_id = ?'];
+  const filterParams = [companyId];
 
   if (query.status) {
-    filters.push('status = :status');
-    params.status = query.status;
+    filters.push('status = ?');
+    filterParams.push(query.status);
   }
 
   if (query.q) {
-    filters.push('(full_name LIKE :q OR phone LIKE :q OR document_number LIKE :q OR code LIKE :q)');
-    params.q = `%${query.q}%`;
+    filters.push('(full_name LIKE ? OR phone LIKE ? OR document_number LIKE ? OR code LIKE ?)');
+    const search = `%${query.q}%`;
+    filterParams.push(search, search, search, search);
   }
 
   const whereClause = filters.join(' AND ');
@@ -174,14 +177,14 @@ async function listCustomers({ companyId, query }) {
       FROM customers
       WHERE ${whereClause}
       ORDER BY id DESC
-      LIMIT :limit OFFSET :offset
+      LIMIT ${safeLimit} OFFSET ${safeOffset}
     `,
-    params
+    filterParams
   );
 
   const [countRows] = await db.execute(
     `SELECT COUNT(*) AS total FROM customers WHERE ${whereClause}`,
-    params
+    filterParams
   );
 
   return {
