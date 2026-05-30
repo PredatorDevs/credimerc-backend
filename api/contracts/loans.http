@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:3000
+@token = REPLACE_WITH_ACCESS_TOKEN
+@loanId = 1
+@customerId = 1
+
+### List loans
+GET {{baseUrl}}/api/loans?page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### List overdue loans
+GET {{baseUrl}}/api/loans/overdue
+Authorization: Bearer {{token}}
+
+### Create loan
+POST {{baseUrl}}/api/loans
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "customerId": {{customerId}},
+  "principalAmount": 100.00,
+  "interestRate": 20,
+  "startDate": "2026-05-30",
+  "dueDate": "2026-06-29"
+}
+
+### Get loan detail
+GET {{baseUrl}}/api/loans/{{loanId}}
+Authorization: Bearer {{token}}
+
+### Update loan (allowed if no valid payments)
+PUT {{baseUrl}}/api/loans/{{loanId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "interestRate": 18,
+  "dueDate": "2026-07-05"
+}
+
+### Cancel loan
+POST {{baseUrl}}/api/loans/{{loanId}}/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Cancelado por solicitud del cliente"
+}

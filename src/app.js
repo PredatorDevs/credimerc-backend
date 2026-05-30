@@ -2,6 +2,9 @@ const express = require('express');
 const authRoutes = require('./modules/auth/auth.routes');
 const filesRoutes = require('./modules/files/files.routes');
 const companiesRoutes = require('./modules/companies/companies.routes');
+const customersRoutes = require('./modules/customers/customers.routes');
+const loansRoutes = require('./modules/loans/loans.routes');
+const paymentsRoutes = require('./modules/payments/payments.routes');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -13,6 +16,9 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/companies', companiesRoutes);
+app.use('/api/customers', customersRoutes);
+app.use('/api/loans', loansRoutes);
+app.use('/api', paymentsRoutes);
 
 app.use((err, req, res, next) => {
   if (res.headersSent) {

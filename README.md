@@ -7,6 +7,9 @@ Base inicial para API en ExpressJS desplegable en Vercel, conectada a MySQL (AWS
 - `database/migrations`: scripts SQL
 - `api/contracts`: contratos OpenAPI
 - `src/modules/auth`: registro, login, refresh, logout, perfil y seleccion de empresa activa
+- `src/modules/customers`: CRUD de clientes por empresa activa
+- `src/modules/loans`: CRUD de prestamos por empresa activa y consulta de vencidos
+- `src/modules/payments`: pagos por prestamo, anulacion y recálculo de saldo
 - `src/modules/files`: modulo de adjuntos (upload-url, confirm, download-url, list, delete, review)
 - `src/middlewares`: auth, company activa, no baneado, autorizacion RBAC
 
@@ -70,11 +73,37 @@ Esto inicializa:
 - `GET /api/companies`
 - `POST /api/companies` (crea company + owner + bootstrap automatico)
 
+## Rutas del modulo customers
+
+- `GET /api/customers`
+- `POST /api/customers`
+- `GET /api/customers/:id`
+- `PUT /api/customers/:id`
+- `DELETE /api/customers/:id` (desactivacion logica)
+
+## Rutas del modulo loans
+
+- `GET /api/loans`
+- `POST /api/loans`
+- `GET /api/loans/overdue`
+- `GET /api/loans/:id`
+- `PUT /api/loans/:id`
+- `POST /api/loans/:id/cancel`
+
+## Rutas del modulo payments
+
+- `GET /api/loans/:loanId/payments`
+- `POST /api/loans/:loanId/payments`
+- `POST /api/payments/:id/void`
+
 ## Pruebas rapidas
 
 - Archivo HTTP de auth: `api/contracts/auth.http`
 - Archivo HTTP de pruebas: `api/contracts/files.http`
 - Archivo HTTP de empresas: `api/contracts/companies.http`
+- Archivo HTTP de customers: `api/contracts/customers.http`
+- Archivo HTTP de loans: `api/contracts/loans.http`
+- Archivo HTTP de payments: `api/contracts/payments.http`
 - Contrato OpenAPI: `api/contracts/files.openapi.yaml`
 
 ## Datos demo

@@ -1,0 +1,29 @@
+@baseUrl = http://localhost:3000
+@token = REPLACE_WITH_ACCESS_TOKEN
+@loanId = 1
+@paymentId = 1
+
+### List loan payments
+GET {{baseUrl}}/api/loans/{{loanId}}/payments
+Authorization: Bearer {{token}}
+
+### Create loan payment
+POST {{baseUrl}}/api/loans/{{loanId}}/payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 25.50,
+  "paymentMethod": "CASH",
+  "referenceNumber": "REC-1001",
+  "notes": "Abono en campo"
+}
+
+### Void payment
+POST {{baseUrl}}/api/payments/{{paymentId}}/void
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Pago duplicado"
+}

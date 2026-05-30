@@ -1,0 +1,52 @@
+@baseUrl = http://localhost:3000
+@token = REPLACE_WITH_ACCESS_TOKEN
+@customerId = 1
+
+### List customers
+GET {{baseUrl}}/api/customers?page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### Search active customers
+GET {{baseUrl}}/api/customers?q=maria&status=ACTIVE
+Authorization: Bearer {{token}}
+
+### Create customer
+POST {{baseUrl}}/api/customers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "code": "C-100",
+  "firstName": "Mario",
+  "lastName": "Gomez",
+  "documentType": "DUI",
+  "documentNumber": "88990011-2",
+  "phone": "+50371112233",
+  "email": "mario.gomez@example.com",
+  "businessName": "Verduras Gomez",
+  "businessType": "Alimentos",
+  "marketName": "Mercado Central",
+  "marketSector": "Verduras",
+  "stallNumber": "V-15",
+  "address": "San Salvador",
+  "notes": "Cliente frecuente"
+}
+
+### Get customer detail
+GET {{baseUrl}}/api/customers/{{customerId}}
+Authorization: Bearer {{token}}
+
+### Update customer
+PUT {{baseUrl}}/api/customers/{{customerId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "phone": "+50372223344",
+  "status": "ACTIVE",
+  "notes": "Actualizado por API"
+}
+
+### Deactivate customer
+DELETE {{baseUrl}}/api/customers/{{customerId}}
+Authorization: Bearer {{token}}
