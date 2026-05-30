@@ -13,6 +13,13 @@ module.exports = {
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET || '',
   jwtIssuer: process.env.JWT_ISSUER || 'credimerc-api',
   jwtAudience: process.env.JWT_AUDIENCE || 'credimerc-app',
+  jwt: {
+    accessExpiresInMinutes: asNumber(process.env.JWT_ACCESS_EXPIRES_IN_MINUTES, 15),
+    refreshExpiresInDays: asNumber(process.env.JWT_REFRESH_EXPIRES_IN_DAYS, 30)
+  },
+  security: {
+    bcryptSaltRounds: asNumber(process.env.BCRYPT_SALT_ROUNDS, 10)
+  },
   mysql: {
     host: process.env.MYSQL_HOST || 'localhost',
     port: asNumber(process.env.MYSQL_PORT, 3306),

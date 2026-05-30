@@ -18,8 +18,15 @@ CREATE TABLE IF NOT EXISTS attachments (
     ) NOT NULL,
 
     storage_provider ENUM('S3') NOT NULL DEFAULT 'S3',
-    bucket_name VARCHAR(120) NOT NULL,
-    object_key VARCHAR(1024) NOT NULL,
+    bucket_name VARCHAR(63)
+        CHARACTER SET ascii
+        COLLATE ascii_bin
+        NOT NULL,
+
+    object_key VARCHAR(1024)
+        CHARACTER SET ascii
+        COLLATE ascii_bin
+        NOT NULL,
     mime_type VARCHAR(100) NOT NULL,
     file_extension VARCHAR(20) NULL,
     size_bytes BIGINT UNSIGNED NOT NULL,

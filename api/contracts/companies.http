@@ -1,0 +1,22 @@
+@baseUrl = http://localhost:3000
+@token = REPLACE_WITH_JWT
+
+### List companies for authenticated user
+GET {{baseUrl}}/api/companies
+Authorization: Bearer {{token}}
+
+### Create company and auto-bootstrap defaults
+POST {{baseUrl}}/api/companies
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Cobros Mercado Central",
+  "commercialName": "CMC",
+  "legalName": "Cobros MC S.A. de C.V.",
+  "nit": "0614-280790-101-9",
+  "nrc": "123456-7",
+  "phone": "+50370001234",
+  "email": "admin@cmc.sv",
+  "address": "Mercado Central, San Salvador"
+}

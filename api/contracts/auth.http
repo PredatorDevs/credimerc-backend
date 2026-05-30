@@ -1,0 +1,52 @@
+@baseUrl = http://localhost:3000
+@token = REPLACE_WITH_ACCESS_TOKEN
+@refreshToken = REPLACE_WITH_REFRESH_TOKEN
+
+### Register user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "john.doe@credimerc.local",
+  "password": "StrongPass123!",
+  "fullName": "John Doe",
+  "phone": "+50370003333"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@credimerc.local",
+  "password": "StrongPass123!"
+}
+
+### Refresh token
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Get my profile
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### Select active company and get a new access token
+POST {{baseUrl}}/api/auth/select-company
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "companyId": 1
+}
+
+### Logout
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
