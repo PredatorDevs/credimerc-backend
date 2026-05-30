@@ -1,0 +1,53 @@
+@baseUrl = http://localhost:3000
+@token = REPLACE_WITH_JWT
+@uploadId = 1
+@attachmentId = 1
+
+### Health
+GET {{baseUrl}}/health
+
+### 1) Solicitar URL firmada para subir ID_FRONT
+POST {{baseUrl}}/api/files/upload-url
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ownerType": "CUSTOMER",
+  "ownerId": 123,
+  "category": "ID_FRONT",
+  "mimeType": "image/jpeg",
+  "sizeBytes": 524288,
+  "originalFileName": "dui_frente.jpg"
+}
+
+### 2) Confirmar archivo subido a S3
+POST {{baseUrl}}/api/files/confirm
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id": {{uploadId}},
+  "checksumSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+}
+
+### 3) Listar archivos del cliente
+GET {{baseUrl}}/api/files?ownerType=CUSTOMER&ownerId=123
+Authorization: Bearer {{token}}
+
+### 4) Obtener URL firmada de descarga
+GET {{baseUrl}}/api/files/{{attachmentId}}/download-url
+Authorization: Bearer {{token}}
+
+### 5) Revisar documento (approve/reject)
+POST {{baseUrl}}/api/files/{{attachmentId}}/review
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "decision": "approve",
+  "notes": "Documento legible"
+}
+
+### 6) Eliminar adjunto (soft delete)
+DELETE {{baseUrl}}/api/files/{{attachmentId}}
+Authorization: Bearer {{token}}
