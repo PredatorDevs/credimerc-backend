@@ -1,4 +1,7 @@
 const db = require('../../lib/db');
+const bcrypt = require('bcryptjs');
+const { randomUUID, randomBytes } = require('crypto');
+const env = require('../../config/env');
 
 function normalizeOptional(value) {
   if (value === undefined || value === null) return null;
@@ -119,12 +122,50 @@ async function listCompanyUsers({ companyId, query }) {
 }
 
 async function inviteCompanyUser({ companyId, payload }) {
-  const user = await findUserByEmail({ email: payload.email });
+  let user = await findUserByEmail({ email: payload.email });
 
   if (!user) {
-    const error = new Error('User not found for the provided email.');
-    error.statusCode = 404;
-    throw error;
+    const generatedPassword = randomBytes(24).toString('hex');
+    const passwordHash = await bcrypt.hash(generatedPassword, env.security.bcryptSaltRounds);
+    const email = payload.email.toLowerCase();
+    const fullName = normalizeOptional(payload.fullName) || inferFullNameFromEmail(email);
+    const phone = normalizeOptional(payload.phone);
+
+    const [userInsertResult] = await db.execute(
+      `
+        INSERT INTO users (
+          public_id,
+          email,
+          password_hash,
+          full_name,
+          phone,
+          status,
+          created_at
+        ) VALUES (
+          :publicId,
+          :email,
+          :passwordHash,
+          :fullName,
+          :phone,
+          'ACTIVE',
+          CURRENT_TIMESTAMP
+        )
+      `,
+      {
+        publicId: randomUUID(),
+        email,
+        passwordHash,
+        fullName,
+        phone
+      }
+    );
+
+    user = {
+      id: userInsertResult.insertId,
+      email,
+      full_name: fullName,
+      status: 'ACTIVE'
+    };
   }
 
   const [existingRows] = await db.execute(
@@ -216,6 +257,20 @@ async function inviteCompanyUser({ companyId, payload }) {
   );
 
   return getCompanyUserById({ companyId, id: insertResult.insertId });
+}
+
+function inferFullNameFromEmail(email) {
+  const local = (email || '').split('@')[0] || 'Usuario';
+  const normalized = local.replace(/[._-]+/g, ' ').trim();
+
+  if (!normalized) {
+    return 'Usuario Invitado';
+  }
+
+  return normalized
+    .split(/\s+/)
+    .map((part) => part[0].toUpperCase() + part.substring(1))
+    .join(' ');
 }
 
 async function updateCompanyUser({ companyId, id, payload, actorCompanyUserId }) {

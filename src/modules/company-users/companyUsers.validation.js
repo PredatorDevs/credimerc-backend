@@ -4,6 +4,8 @@ const COMPANY_USER_STATUS = ['ACTIVE', 'INACTIVE', 'INVITED', 'REMOVED'];
 
 const inviteCompanyUserSchema = z.object({
   email: z.string().email().max(150),
+  fullName: z.string().min(2).max(200).optional(),
+  phone: z.string().max(30).optional(),
   employeeCode: z.string().max(50).optional(),
   jobTitle: z.string().max(100).optional(),
   isOwner: z.boolean().optional(),
