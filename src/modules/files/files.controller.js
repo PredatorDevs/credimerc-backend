@@ -31,7 +31,7 @@ async function createUploadUrl(req, res, next) {
 
     const requiredPermission = filesService.selectUploadPermission(payload.category);
     if (!hasPermission(req, requiredPermission)) {
-      return res.status(403).json({ error: 'FORBIDDEN', message: 'Missing required permission.' });
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Falta el permiso requerido.' });
     }
 
     const data = await filesService.createUploadUrl({
@@ -84,7 +84,7 @@ async function getDownloadUrl(req, res, next) {
     }
 
     if (!hasPermission(req, data.requiredPermission)) {
-      return res.status(403).json({ error: 'FORBIDDEN', message: 'Missing required permission.' });
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Falta el permiso requerido.' });
     }
 
     return res.status(200).json({
@@ -141,7 +141,7 @@ async function removeFile(req, res, next) {
 async function reviewFile(req, res, next) {
   try {
     if (!hasPermission(req, 'files.id.review')) {
-      return res.status(403).json({ error: 'FORBIDDEN', message: 'Missing required permission.' });
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Falta el permiso requerido.' });
     }
 
     const id = Number(req.params.id);
