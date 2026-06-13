@@ -12,6 +12,10 @@ function generateRefreshToken() {
   return randomBytes(48).toString('hex');
 }
 
+function generatePasswordResetToken() {
+  return randomBytes(32).toString('hex');
+}
+
 function mapMembershipRow(row) {
   if (!row) {
     return {
@@ -370,6 +374,162 @@ async function logout({ refreshToken }) {
   return result.affectedRows > 0;
 }
 
+async function forgotPassword({ email }) {
+  const normalizedEmail = email.toLowerCase();
+
+  const [rows] = await db.execute(
+    `
+      SELECT id, status
+      FROM users
+      WHERE email = :email
+      LIMIT 1
+    `,
+    { email: normalizedEmail }
+  );
+
+  const user = rows[0];
+  if (!user || user.status !== 'ACTIVE') {
+    return { issued: false, userId: null, token: null };
+  }
+
+  const token = generatePasswordResetToken();
+  const tokenHash = hashToken(token);
+
+  await db.execute(
+    `
+      INSERT INTO password_reset_tokens (
+        user_id,
+        token_hash,
+        expires_at,
+        used_at,
+        created_at
+      ) VALUES (
+        :userId,
+        :tokenHash,
+        DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 MINUTE),
+        NULL,
+        CURRENT_TIMESTAMP
+      )
+    `,
+    {
+      userId: user.id,
+      tokenHash
+    }
+  );
+
+  return {
+    issued: true,
+    userId: user.id,
+    token
+  };
+}
+
+async function resetPassword({ token, newPassword }) {
+  const tokenHash = hashToken(token);
+
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [tokenRows] = await connection.execute(
+      `
+        SELECT id, user_id, expires_at, used_at
+        FROM password_reset_tokens
+        WHERE token_hash = :tokenHash
+        LIMIT 1
+        FOR UPDATE
+      `,
+      { tokenHash }
+    );
+
+    const resetToken = tokenRows[0];
+    if (!resetToken) {
+      const error = new Error('Invalid reset token.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (resetToken.used_at) {
+      const error = new Error('Reset token already used.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (new Date(resetToken.expires_at).getTime() <= Date.now()) {
+      const error = new Error('Reset token expired.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const [userRows] = await connection.execute(
+      `
+        SELECT id, status
+        FROM users
+        WHERE id = :userId
+        LIMIT 1
+        FOR UPDATE
+      `,
+      { userId: resetToken.user_id }
+    );
+
+    const user = userRows[0];
+    if (!user || user.status !== 'ACTIVE') {
+      const error = new Error('User not eligible for password reset.');
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, env.security.bcryptSaltRounds);
+
+    await connection.execute(
+      `
+        UPDATE users
+        SET
+          password_hash = :passwordHash,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = :userId
+      `,
+      {
+        userId: user.id,
+        passwordHash
+      }
+    );
+
+    await connection.execute(
+      `
+        UPDATE password_reset_tokens
+        SET
+          used_at = CURRENT_TIMESTAMP
+        WHERE id = :id
+      `,
+      { id: resetToken.id }
+    );
+
+    await connection.execute(
+      `
+        UPDATE user_sessions
+        SET revoked_at = CURRENT_TIMESTAMP
+        WHERE user_id = :userId
+          AND revoked_at IS NULL
+      `,
+      { userId: user.id }
+    );
+
+    await connection.commit();
+
+    return {
+      userId: user.id,
+      tokenId: resetToken.id
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 async function selectCompany({ userId, companyId }) {
   const [userRows] = await db.execute(
     `SELECT id, public_id, email, full_name, phone, status FROM users WHERE id = :userId LIMIT 1`,
@@ -438,6 +598,8 @@ module.exports = {
   login,
   refresh,
   logout,
+  forgotPassword,
+  resetPassword,
   selectCompany,
   getAuthProfile
 };

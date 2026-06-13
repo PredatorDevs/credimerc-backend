@@ -3,6 +3,8 @@ const responseEnvelope = require('./middlewares/responseEnvelope');
 const authRoutes = require('./modules/auth/auth.routes');
 const filesRoutes = require('./modules/files/files.routes');
 const companiesRoutes = require('./modules/companies/companies.routes');
+const companyUsersRoutes = require('./modules/company-users/companyUsers.routes');
+const rbacRoutes = require('./modules/rbac/rbac.routes');
 const customersRoutes = require('./modules/customers/customers.routes');
 const loansRoutes = require('./modules/loans/loans.routes');
 const paymentsRoutes = require('./modules/payments/payments.routes');
@@ -18,6 +20,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/companies', companiesRoutes);
+app.use('/api/company-users', companyUsersRoutes);
+app.use('/api', rbacRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api', paymentsRoutes);

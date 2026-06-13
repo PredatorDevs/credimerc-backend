@@ -4,9 +4,12 @@ const {
   loginSchema,
   refreshSchema,
   logoutSchema,
-  selectCompanySchema
+  selectCompanySchema,
+  forgotPasswordSchema,
+  resetPasswordSchema
 } = require('./auth.validation');
 const authService = require('./auth.service');
+const { recordAudit } = require('../../lib/auditLog');
 
 function parseSchema(schema, data, res) {
   const parsed = schema.safeParse(data);
@@ -97,6 +100,71 @@ async function selectCompany(req, res, next) {
   }
 }
 
+async function forgotPassword(req, res, next) {
+  try {
+    const payload = parseSchema(forgotPasswordSchema, req.body, res);
+    if (!payload) return;
+
+    const context = extractClientContext(req);
+    const data = await authService.forgotPassword({
+      email: payload.email,
+      ...context
+    });
+
+    if (data?.userId) {
+      await recordAudit({
+        companyId: null,
+        userId: data.userId,
+        companyUserId: null,
+        action: 'PASSWORD_RESET_REQUESTED',
+        entityType: 'users',
+        entityId: data.userId,
+        oldValues: null,
+        newValues: { email: payload.email.toLowerCase() },
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent
+      });
+    }
+
+    return res.status(202).json({
+      message: 'If the email exists, a reset token has been issued.'
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function resetPassword(req, res, next) {
+  try {
+    const payload = parseSchema(resetPasswordSchema, req.body, res);
+    if (!payload) return;
+
+    const context = extractClientContext(req);
+    const data = await authService.resetPassword({
+      token: payload.token,
+      newPassword: payload.newPassword,
+      ...context
+    });
+
+    await recordAudit({
+      companyId: null,
+      userId: data.userId,
+      companyUserId: null,
+      action: 'PASSWORD_RESET_COMPLETED',
+      entityType: 'users',
+      entityId: data.userId,
+      oldValues: null,
+      newValues: { tokenId: data.tokenId },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent
+    });
+
+    return res.status(200).json({ message: 'Password reset successful.' });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function me(req, res, next) {
   try {
     const data = await authService.getAuthProfile({ userId: req.auth.userId });
@@ -113,6 +181,8 @@ module.exports = {
   login,
   refresh,
   logout,
+  forgotPassword,
+  resetPassword,
   selectCompany,
   me,
   withAuth

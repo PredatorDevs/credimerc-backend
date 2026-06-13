@@ -22,10 +22,21 @@ const selectCompanySchema = z.object({
   companyId: z.coerce.number().int().positive()
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email().max(150)
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(20).max(512),
+  newPassword: z.string().min(8).max(128)
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
   refreshSchema,
   logoutSchema,
-  selectCompanySchema
+  selectCompanySchema,
+  forgotPasswordSchema,
+  resetPasswordSchema
 };
