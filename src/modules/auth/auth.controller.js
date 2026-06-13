@@ -167,7 +167,10 @@ async function resetPassword(req, res, next) {
 
 async function me(req, res, next) {
   try {
-    const data = await authService.getAuthProfile({ userId: req.auth.userId });
+    const data = await authService.getAuthProfile({
+      userId: req.auth.userId,
+      preferredCompanyId: req.auth.activeCompanyId
+    });
     return res.status(200).json(data);
   } catch (error) {
     return next(error);
