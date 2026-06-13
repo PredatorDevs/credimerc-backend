@@ -54,6 +54,11 @@ const confirmUploadSchema = z.object({
   checksumSha256: z.string().length(64).optional()
 });
 
+const abortUploadSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  reason: z.string().min(3).max(500).optional()
+});
+
 const listFilesSchema = z.object({
   ownerType: z.enum(OWNER_TYPES),
   ownerId: z.coerce.number().int().positive(),
@@ -68,6 +73,7 @@ const reviewFileSchema = z.object({
 module.exports = {
   createUploadUrlSchema,
   confirmUploadSchema,
+  abortUploadSchema,
   listFilesSchema,
   reviewFileSchema
 };

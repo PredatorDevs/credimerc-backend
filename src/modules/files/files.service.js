@@ -45,6 +45,15 @@ function toAttachmentResponse(row) {
   };
 }
 
+async function getAttachmentById({ companyId, id }) {
+  const [rows] = await db.execute(
+    `SELECT * FROM attachments WHERE company_id = :companyId AND id = :id AND deleted_at IS NULL LIMIT 1`,
+    { companyId, id }
+  );
+
+  return rows[0] || null;
+}
+
 async function createUploadUrl({ auth, companyId, payload }) {
   const publicId = randomUUID();
   const extension = resolveExtension(payload.originalFileName);
@@ -124,12 +133,7 @@ async function createUploadUrl({ auth, companyId, payload }) {
 }
 
 async function confirmUpload({ companyId, id, checksumSha256 }) {
-  const [rows] = await db.execute(
-    `SELECT * FROM attachments WHERE company_id = :companyId AND id = :id AND deleted_at IS NULL LIMIT 1`,
-    { companyId, id }
-  );
-
-  const row = rows[0];
+  const row = await getAttachmentById({ companyId, id });
   if (!row) {
     return null;
   }
@@ -158,6 +162,40 @@ async function confirmUpload({ companyId, id, checksumSha256 }) {
   );
 
   return toAttachmentResponse(updatedRows[0]);
+}
+
+async function abortUpload({ companyId, id, reason, companyUserId }) {
+  const row = await getAttachmentById({ companyId, id });
+  if (!row) {
+    return null;
+  }
+
+  if (row.status !== 'UPLOADING') {
+    return toAttachmentResponse(row);
+  }
+
+  await db.execute(
+    `
+      UPDATE attachments
+      SET
+        status = 'REJECTED',
+        review_notes = COALESCE(:reason, review_notes),
+        reviewed_by_company_user_id = COALESCE(reviewed_by_company_user_id, :companyUserId),
+        reviewed_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE company_id = :companyId
+        AND id = :id
+    `,
+    {
+      companyId,
+      id,
+      reason: reason || null,
+      companyUserId: companyUserId || null
+    }
+  );
+
+  const updated = await getAttachmentById({ companyId, id });
+  return updated ? toAttachmentResponse(updated) : null;
 }
 
 async function getDownloadUrl({ companyId, id }) {
@@ -284,8 +322,10 @@ async function reviewFile({ companyId, id, companyUserId, decision, notes }) {
 module.exports = {
   selectUploadPermission,
   selectViewPermission,
+  getAttachmentById,
   createUploadUrl,
   confirmUpload,
+  abortUpload,
   getDownloadUrl,
   listFiles,
   removeFile,

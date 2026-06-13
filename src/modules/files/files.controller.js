@@ -1,6 +1,7 @@
 const {
   createUploadUrlSchema,
   confirmUploadSchema,
+  abortUploadSchema,
   listFilesSchema,
   reviewFileSchema
 } = require('./files.validation');
@@ -60,6 +61,43 @@ async function confirmUpload(req, res, next) {
     if (!data) {
       return res.status(404).json({ error: 'NOT_FOUND', message: 'Attachment not found.' });
     }
+
+    return res.status(200).json(data);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function abortUpload(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Invalid id.' });
+    }
+
+    const payload = parseSchema(abortUploadSchema, { ...req.body, id }, res);
+    if (!payload) return;
+
+    const existing = await filesService.getAttachmentById({
+      companyId: req.company.id,
+      id
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Attachment not found.' });
+    }
+
+    const requiredPermission = filesService.selectUploadPermission(existing.category);
+    if (!hasPermission(req, requiredPermission)) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Falta el permiso requerido.' });
+    }
+
+    const data = await filesService.abortUpload({
+      companyId: req.company.id,
+      id,
+      reason: payload.reason,
+      companyUserId: req.auth.companyUserId
+    });
 
     return res.status(200).json(data);
   } catch (error) {
@@ -173,6 +211,7 @@ async function reviewFile(req, res, next) {
 module.exports = {
   createUploadUrl,
   confirmUpload,
+  abortUpload,
   getDownloadUrl,
   listFiles,
   removeFile,
