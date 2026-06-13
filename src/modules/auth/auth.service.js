@@ -562,7 +562,7 @@ async function selectCompany({ userId, companyId }) {
   };
 }
 
-async function getAuthProfile({ userId }) {
+async function getAuthProfile({ userId, preferredCompanyId }) {
   const [userRows] = await db.execute(
     `SELECT id, public_id, email, full_name, phone, status, last_login_at FROM users WHERE id = :userId LIMIT 1`,
     { userId }
@@ -575,7 +575,10 @@ async function getAuthProfile({ userId }) {
     throw error;
   }
 
-  const membership = await getMembershipWithPermissions({ userId });
+  const membership = await getMembershipWithPermissions({
+    userId,
+    preferredCompanyId
+  });
 
   return {
     user: {
