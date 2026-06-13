@@ -8,6 +8,7 @@ const rbacRoutes = require('./modules/rbac/rbac.routes');
 const customersRoutes = require('./modules/customers/customers.routes');
 const loansRoutes = require('./modules/loans/loans.routes');
 const paymentsRoutes = require('./modules/payments/payments.routes');
+const reportsRoutes = require('./modules/reports/reports.routes');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -25,6 +26,7 @@ app.use('/api', rbacRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api', paymentsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 app.use((err, req, res, next) => {
   if (res.headersSent) {
